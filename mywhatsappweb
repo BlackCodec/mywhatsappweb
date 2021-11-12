@@ -1,0 +1,64 @@
+#!/usr/bin/python3
+
+import gi, pathlib
+gi.require_version('Gtk', '3.0')
+gi.require_version('WebKit2', '4.0')
+gi.require_version('Notify', '0.7')
+
+from gi.repository import Gtk
+from gi.repository import WebKit2
+from gi.repository import Notify
+from gi.repository import Gdk
+from pathlib import Path
+
+appName="MyWhatsAppWeb"
+icona=".icons/custom/mywhatsappweb.png"
+url="https://web.whatsapp.com"
+
+class MyWhatsAppWeb(Gtk.Window):
+  
+  def __init__(self):
+    Notify.init(appName)
+    Gtk.Window.__init__(self, title=appName)
+    self.set_default_size(800, 600)
+    self.set_default_icon_from_file(str(Path.joinpath(Path.home(),icona)))
+    self.set_icon_from_file(str(Path.joinpath(Path.home(),icona)))
+    self.scroller = Gtk.ScrolledWindow()
+    WebKit2.WebContext.get_default().initialize_notification_permissions([self.get_notification_domain(url)],[])
+    self.web = WebKit2.WebView()
+    self.web.connect('decide-policy', self.policy_decision_requested)
+    self.web.connect('context-menu', self.fake_menu)
+    self.web.connect('show-notification', self.show_notification)
+    self.scroller.add(self.web)
+    self.add(self.scroller)
+    self.connect('delete-event', Gtk.main_quit)
+    self.connect("key-press-event",self.premuto)
+    self.show_all()
+    self.web.load_uri(url)
+  
+  def fake_menu(self, view,context_menu,event,hit_test_result):
+    context_menu.remove_all()
+    return
+  def show_notification(self, view, notification):
+    Notify.Notification.new(notification.get_title(),notification.get_body())
+    return
+  def premuto(self,widget,event):
+    keyval = event.keyval
+    keyval_name = Gdk.keyval_name(keyval)
+    if keyval_name == "F5":
+      self.web.reload()
+  def get_notification_domain(self,url) :
+    protocollo=url.split('://')[0]
+    dominio=(url.split('://')[1]).split('/')[0]
+    porta = 80
+    if protocollo == 'https':
+      porta = 443
+    return WebKit2.SecurityOrigin.new(protocollo,dominio,porta)
+  def policy_decision_requested(self,view, decision, decisionType):
+    if decision.get_request().get_uri().startswith('blob:'):
+      Notify.Notification.new("Download file","File scaricato.").show()
+    return
+
+
+win = MyWhatsAppWeb()
+Gtk.main()
