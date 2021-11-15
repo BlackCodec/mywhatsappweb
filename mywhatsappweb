@@ -1,28 +1,37 @@
 #!/usr/bin/python3
 
+# RELEASE: 211115.1045
+
 import gi, pathlib
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.0')
 gi.require_version('Notify', '0.7')
+gi.require_version('AppIndicator3', '0.1')
 
 from gi.repository import Gtk
 from gi.repository import WebKit2
 from gi.repository import Notify
 from gi.repository import Gdk
+from gi.repository import AppIndicator3
 from pathlib import Path
 
 appName="MyWhatsAppWeb"
 icona=".icons/custom/mywhatsappweb.png"
 url="https://web.whatsapp.com"
-
+indicator = None
 class MyWhatsAppWeb(Gtk.Window):
   
   def __init__(self):
+    global indicator
+    global appName
+    global icona
+    global url
+    fullIconPath = str(Path.joinpath(Path.home(),icona))
     Notify.init(appName)
     Gtk.Window.__init__(self, title=appName)
     self.set_default_size(800, 600)
-    self.set_default_icon_from_file(str(Path.joinpath(Path.home(),icona)))
-    self.set_icon_from_file(str(Path.joinpath(Path.home(),icona)))
+    self.set_default_icon_from_file(fullIconPath)
+    self.set_icon_from_file(fullIconPath)
     self.scroller = Gtk.ScrolledWindow()
     WebKit2.WebContext.get_default().initialize_notification_permissions([self.get_notification_domain(url)],[])
     self.web = WebKit2.WebView()
@@ -31,10 +40,26 @@ class MyWhatsAppWeb(Gtk.Window):
     self.web.connect('show-notification', self.show_notification)
     self.scroller.add(self.web)
     self.add(self.scroller)
-    self.connect('delete-event', Gtk.main_quit)
+    self.connect('delete-event', self.nascondi)
     self.connect("key-press-event",self.premuto)
     self.show_all()
+    if indicator is None:
+      indicator = AppIndicator3.Indicator.new(appName, fullIconPath, AppIndicator3.IndicatorCategory.APPLICATION_STATUS)
+      indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+    menu = Gtk.Menu()
+    command_mostra = Gtk.MenuItem("Show")
+    command_mostra.connect('activate', self.mostra)
+    menu.append(command_mostra)
+    command_refresh = Gtk.MenuItem("Reload")
+    command_refresh.connect('activate', self.pageReload)
+    menu.append(command_refresh)
+    exittray = Gtk.MenuItem('Exit')
+    exittray.connect('activate', Gtk.main_quit)
+    menu.append(exittray)
+    menu.show_all()
+    indicator.set_menu(menu)
     self.web.load_uri(url)
+    Gtk.main()
   
   def fake_menu(self, view,context_menu,event,hit_test_result):
     context_menu.remove_all()
@@ -46,7 +71,7 @@ class MyWhatsAppWeb(Gtk.Window):
     keyval = event.keyval
     keyval_name = Gdk.keyval_name(keyval)
     if keyval_name == "F5":
-      self.web.reload()
+      self.pageReload(None)
   def get_notification_domain(self,url) :
     protocollo=url.split('://')[0]
     dominio=(url.split('://')[1]).split('/')[0]
@@ -56,9 +81,18 @@ class MyWhatsAppWeb(Gtk.Window):
     return WebKit2.SecurityOrigin.new(protocollo,dominio,porta)
   def policy_decision_requested(self,view, decision, decisionType):
     if decision.get_request().get_uri().startswith('blob:'):
-      Notify.Notification.new("Download file","File scaricato.").show()
+      Notify.Notification.new("Download file","Download completed.").show()
     return
+  def pageReload(self,_):
+    self.web.reload()
+  def nascondi(self,event,_):
+    self.hide_on_delete()
+    return True
+  def mostra(self, status):
+    self.deiconify()
+    self.present()
+    self.show_all()
 
 
-win = MyWhatsAppWeb()
-Gtk.main()
+if __name__ == "__main__":
+  win = MyWhatsAppWeb()
