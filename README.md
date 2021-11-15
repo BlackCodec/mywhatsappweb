@@ -2,7 +2,14 @@
 My WhatsApp Web application
 
 ## Release 
-### 211112.1730
+### Latest: 211115.1045
+
+#### 211115.1045
+Add support for tray icon. 
+
+Close on tray icon.
+
+#### 211112.1730
 This is the first release.
 
 This is a wrapper to WhatsappWeb Site
