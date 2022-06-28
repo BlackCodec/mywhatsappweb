@@ -1,11 +1,16 @@
 # MyWhatsAppWeb
 My WhatsApp Web application
 
-## Release 
-### Latest: 211115.1045
+## Release
+### Latest: 20220628.1715
+
+#### 20220628.1715
+Add support for open external link in default browser.
+
+Change versioning number with full year format.
 
 #### 211115.1045
-Add support for tray icon. 
+Add support for tray icon.
 
 Close on tray icon.
 

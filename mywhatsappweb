@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-# RELEASE: 211115.1045
+# RELEASE: 20220628.1715
 
-import gi, pathlib
+import gi, pathlib, subprocess
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.0')
 gi.require_version('Notify', '0.7')
@@ -80,8 +80,11 @@ class MyWhatsAppWeb(Gtk.Window):
       porta = 443
     return WebKit2.SecurityOrigin.new(protocollo,dominio,porta)
   def policy_decision_requested(self,view, decision, decisionType):
+    #print(decision.get_request().get_uri())
     if decision.get_request().get_uri().startswith('blob:'):
       Notify.Notification.new("Download file","Download completed.").show()
+    elif url not in decision.get_request().get_uri():
+      subprocess.call(["xdg-open", decision.get_request().get_uri()])
     return
   def pageReload(self,_):
     self.web.reload()
@@ -96,3 +99,4 @@ class MyWhatsAppWeb(Gtk.Window):
 
 if __name__ == "__main__":
   win = MyWhatsAppWeb()
+
