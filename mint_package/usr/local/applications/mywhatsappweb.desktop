@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Version=1.0
+Name=My WhatsApp Web
+GenericName=My WhatsApp Web
+Comment=WhatsApp Web Wrapper
+Icon=/usr/local/share/icons/hicolor/64x64/apps/mywhatsappweb.png
+Exec=/usr/local/bin/mywhatsappweb
+Terminal=false
+Categories=GTK;GNOME;Network;
+Keywords=web;whatsapp;chat;messaging;messenger;
