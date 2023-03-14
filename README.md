@@ -1,25 +1,41 @@
 # MyWhatsAppWeb
-My WhatsApp Web application
+My WhatsApp Web application rewrite in vala with support for multiple session.
 
-## Release
-### Latest: 20220628.1715
+Startup parameters:
 
-#### 20220628.1715
-Add support for open external link in default browser.
+ - --session=session_name: to start a specific session (if not specified the default session name is "default")
+ - --incognito: to start a session that does not store anything on disk (like a private session)
 
-Change versioning number with full year format.
-
-#### 211115.1045
-Add support for tray icon.
-
-Close on tray icon.
-
-#### 211112.1730
-This is the first release.
-
-This is a wrapper to WhatsappWeb Site
-
+---
 
 ## Installation
-Before start the application the first time copy the whatsapp icon in $HOME/.icons/custom/mywhatsappweb.png or change the variable "icona" inside the file.
 
+### Using script
+
+Launch the script *install.sh* if you want to install globally with sudo.
+
+### Manual installation
+
+ - Copy the icon mywhatsappweb.png in $HOME/.local/share/icons/ or /usr/share/icons/ .
+ - Copy the file in bin (or the file that you compile with build.sh script) in ${HOME}/.local/bin/ or /usr/local/bin/ and make sure you have that folder in your $PATH env variable.
+ - Check also that the bin is executable.
+ - Replace @image_path@ in mywhatsappweb.desktop file with the path where you put the icon in the previous step.
+ - Replace @bin_path@ in mywhatsappweb.desktop file with the path where you put the bin file in the previous step.
+ - Copy the desktop file mywhatsappweb.desktop in $HOME/.local/share/applications/ or /usr/share/applications/ .
+
+### How to build
+
+From source use the *build.sh* script.
+
+You need vala with libnotify, gtk+ 3.0 and webkit2gtk-4.0.
+
+---
+
+## Release
+
+**Latest: 20230314.1600**
+
+### History
+
+#### 20230314.1600
+ - First release for this vala version
