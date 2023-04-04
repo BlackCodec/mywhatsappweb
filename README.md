@@ -5,7 +5,7 @@ Startup parameters:
 
  - --session=session_name: to start a specific session (if not specified the default session name is "default")
  - --incognito: to start a session that does not store anything on disk (like a private session)
-
+ - --level=level_to_set: set the logger level to the specified level. Possible values are: none, error, info, debug. If not specified the default value is error
 ---
 
 ## Installation
@@ -33,9 +33,16 @@ You need vala with libnotify, gtk+ 3.0 and webkit2gtk-4.0.
 
 ## Release
 
-**Latest: 20230314.1600**
+**Latest: 20230404.1430**
 
 ### History
+
+#### 20230404.1430
+ - Add support for close to tray options from the tray menu
+ - Implemented logging class and level (also as startup parameter)
+ - Support for store configurations per session
+ - Click on tray icon now hide or show the window based on the current window status
+
 
 #### 20230314.1600
  - First release for this vala version
