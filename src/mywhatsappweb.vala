@@ -7,7 +7,8 @@ namespace MyWhatsAppWeb {
 	public class Logger {
 		
 		private static Level current_level = Level.ERROR;
-		
+		private static bool locked = false;
+
 		enum Level {
 			NONE,
 			ERROR,
@@ -18,24 +19,27 @@ namespace MyWhatsAppWeb {
 		}
 		
 		public static string level() { return Logger.current_level.string(); }
-		
+		public static void lock() { Logger.locked = true; }
+
 		public static void set_level(string level) {
-			switch(level.down()) {
-				case "none":
-					Logger.current_level = Level.NONE;
-					break;
-				case "error":
-					Logger.current_level = Level.ERROR;
-					break;
-				case "info":
-					Logger.current_level = Level.INFO;
-					break;
-				case "debug":
-					Logger.current_level = Level.DEBUG;
-					break;
-				default: 
-					Logger.print_line(Level.ERROR,"Wrong level: " + level);
-					break;
+			if (!Logger.locked) {
+				switch(level.down()) {
+					case "none":
+						Logger.current_level = Level.NONE;
+						break;
+					case "error":
+						Logger.current_level = Level.ERROR;
+						break;
+					case "info":
+						Logger.current_level = Level.INFO;
+						break;
+					case "debug":
+						Logger.current_level = Level.DEBUG;
+						break;
+					default: 
+						Logger.print_line(Level.ERROR,"Wrong level: " + level);
+						break;
+				}
 			}
 		}
 		
@@ -73,6 +77,7 @@ namespace MyWhatsAppWeb {
 		private bool incognito = false;
 		private bool close_to_tray = false;
 		private string icon = null;
+		private int notify_num = 0;
 
 		private Gtk.StatusIcon tray = null;
 		private WebKit.WebView web_view = null;
@@ -156,6 +161,11 @@ namespace MyWhatsAppWeb {
 			web_view.show_notification.connect((source,notification) => {
 				try {
 					Notify.Notification n = new Notify.Notification ("%s - %s".printf(notification.title, this.session_name), notification.body, this.icon);
+					notification.closed.connect(()=> {
+						Logger.debug("Notification closed");
+						this.set_notify(false);
+					});
+					this.set_notify(true);
 					n.show ();
 				} catch (Error e) {
 					error("Error: %s",e.message);
@@ -164,6 +174,52 @@ namespace MyWhatsAppWeb {
 			});
 			web_view.load_uri(SITE_URL);
 			return web_view;
+		}
+
+		private void set_notify(bool active) {
+			if (active) {
+				this.notify_num += 1;
+			} else {
+				this.notify_num -=1;
+			}
+			if (this.notify_num > 0) {
+				string ticon = this.current_data_dir + "/notify.png";
+				// draw image
+				Cairo.ImageSurface img_surface = new Cairo.ImageSurface.from_png(this.icon);
+				Cairo.Context img_context = new Cairo.Context (img_surface);
+				int w = img_surface.get_width();
+				int h = img_surface.get_height();
+				img_context.set_source_surface(img_surface,0,0);
+				// draw text
+				Cairo.ImageSurface text_surface = new Cairo.ImageSurface (Cairo.Format.ARGB32, w, h);
+				Cairo.Context text_context = new Cairo.Context (text_surface);
+				text_context.set_source_rgba(1,0,0,1);
+				text_context.select_font_face ("Sans", Cairo.FontSlant.NORMAL, Cairo.FontWeight.BOLD);
+				text_context.set_font_size (50);
+				Cairo.TextExtents extents;
+				text_context.text_extents (this.notify_num.to_string(), out extents);
+				double x = w/2-(extents.width/2 + extents.x_bearing);
+				double y = h/2-(extents.height/2 + extents.y_bearing);
+				text_context.move_to (x, y);
+				text_context.show_text (this.notify_num.to_string());
+				text_context.stroke();
+				// draw icon
+				Cairo.ImageSurface surface = new Cairo.ImageSurface (Cairo.Format.ARGB32, w, h);
+				Cairo.Context context = new Cairo.Context (surface);
+				context.set_operator(Cairo.Operator.OVER);
+				context.set_source_surface(img_context.get_target(),0,1);
+				context.paint();
+				context.set_operator(Cairo.Operator.OVER);
+				context.set_source_surface(text_context.get_target(),0,1);
+				context.paint();
+				Cairo.Status status_wr = surface.write_to_png(ticon);
+                                if (status_wr == Cairo.Status.SUCCESS) {
+					this.tray.set_from_file(ticon);
+				}
+			} else {
+				this.notify_num = 0;
+				this.tray.set_from_file(this.icon);
+			}
 		}
 
 		private Gtk.Box create_box() {
@@ -239,7 +295,7 @@ namespace MyWhatsAppWeb {
 				}
 			} else {
 				Logger.info("Incognito mode, save disabled");
-			}							
+			}
 		}
 
 		private Gtk.Menu create_menu() {
@@ -319,6 +375,7 @@ namespace MyWhatsAppWeb {
 		}
 
 		public static int main (string[] args) {
+			Logger.debug("Release: 20230504.1000");
 			Gtk.init (ref args);
 			string session_name = "default";
 			bool incognito = false;
@@ -328,8 +385,10 @@ namespace MyWhatsAppWeb {
 					session_name = args[i].replace("--session=","");
 				if (args[i] == "--private")
 					incognito = true;
-				if (args[i].has_prefix("--level="))
+				if (args[i].has_prefix("--level=")) {
 					Logger.set_level(args[i].replace("--level=",""));
+					Logger.lock();
+				}
 			}
 			MyWhatsAppWebApp app = new MyWhatsAppWebApp(session_name, incognito);
 			Gtk.main ();
