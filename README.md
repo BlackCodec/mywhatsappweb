@@ -33,9 +33,13 @@ You need vala with libnotify, gtk+ 3.0 and webkit2gtk-4.0.
 
 ## Release
 
-**Latest: 20230404.1430**
+**Latest: 20230504.1000**
 
 ### History
+
+#### 20230504.1000
+ - Add support for show number of unread notification on icon in tray
+
 
 #### 20230404.1430
  - Add support for close to tray options from the tray menu
